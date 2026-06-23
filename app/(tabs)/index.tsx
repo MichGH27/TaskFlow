@@ -1,47 +1,80 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 
 
-export default function TaskFlowScreen() {
-
-  const [task, setTask] = useState('');
-
-  const [tasks, setTasks] = useState([
-    {
-      id: '1',
-      title: 'Study React Native',
-      completed: false,
-    },
-    {
-      id: '2',
-      title: 'Finish Assignment',
-      completed: false,
-    },
-  ]);
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
 
-  const addTask = () => {
+export default function App() {
 
-    if (task.trim() === '') {
+  const [task, setTask] = useState<string>('');
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  // para malaman kung nag e-edit tayo
+  const [editId, setEditId] = useState<string | null>(null);
+
+
+
+  // CREATE + UPDATE
+  const handleAddTask = (): void => {
+
+    if (!task.trim()) return;
+
+
+    // EDIT MODE
+    if(editId){
+
+      setTasks(
+        tasks.map((item)=>
+          item.id === editId
+          ?
+          {
+            ...item,
+            title: task.trim()
+          }
+          :
+          item
+        )
+      );
+
+
+      setEditId(null);
+      setTask('');
+
       return;
     }
 
 
+
+    // ADD MODE
+
+    const newTask: Task = {
+
+      id: Date.now().toString(),
+
+      title: task.trim(),
+
+      completed:false,
+
+    };
+
+
     setTasks([
       ...tasks,
-      {
-        id: Date.now().toString(),
-        title: task,
-        completed: false,
-      },
+      newTask
     ]);
 
 
@@ -50,18 +83,78 @@ export default function TaskFlowScreen() {
   };
 
 
+
+
+  // CHECK / UNCHECK
+  const handleToggleTask = (id:string):void=>{
+
+    setTasks(
+
+      tasks.map((item)=>
+
+        item.id === id
+
+        ?
+
+        {
+          ...item,
+          completed:!item.completed
+        }
+
+        :
+
+        item
+
+      )
+
+    );
+
+  };
+
+
+
+
+
+  // DELETE
+  const handleDeleteTask=(id:string):void=>{
+
+    setTasks(
+      tasks.filter(
+        item=>item.id !== id
+      )
+    );
+
+  };
+
+
+
+
+
+  // EDIT
+  const handleEditTask=(item:Task):void=>{
+
+    setTask(item.title);
+
+    setEditId(item.id);
+
+  };
+
+
+
+
   return (
 
     <View style={styles.container}>
 
 
-      <View style={headerStyles.header}>
+      <View style={styles.header}>
 
-        <Text style={headerStyles.title}>
+        <Text style={styles.title}>
           TaskFlow
         </Text>
 
       </View>
+
 
 
 
@@ -70,13 +163,13 @@ export default function TaskFlowScreen() {
 
         <TextInput
 
+          style={styles.input}
+
           placeholder="Enter Task"
 
           value={task}
 
           onChangeText={setTask}
-
-          style={styles.input}
 
         />
 
@@ -86,17 +179,23 @@ export default function TaskFlowScreen() {
 
           style={styles.addButton}
 
-          onPress={addTask}
+          onPress={handleAddTask}
 
         >
 
           <MaterialIcons
 
-            name="add"
+            name={
+              editId
+              ?
+              "save"
+              :
+              "add"
+            }
 
             size={24}
 
-            color="white"
+            color="#fff"
 
           />
 
@@ -109,38 +208,138 @@ export default function TaskFlowScreen() {
 
 
 
-      {tasks.map((item)=>(
-
-        <View
-
-          key={item.id}
-
-          style={styles.taskRow}
-
-        >
-
-          <MaterialIcons
-
-            name="check-box-outline-blank"
-
-            size={24}
-
-            color="#555"
-
-          />
 
 
-          <Text style={styles.taskText}>
-
-            {item.title}
-
-          </Text>
+      <ScrollView>
 
 
-        </View>
+        {tasks.map((item:Task)=>(
 
 
-      ))}
+          <View
+
+            key={item.id}
+
+            style={styles.taskRow}
+
+          >
+
+
+
+            <TouchableOpacity
+
+              onPress={()=>handleToggleTask(item.id)}
+
+            >
+
+              <MaterialIcons
+
+                name={
+                  item.completed
+                  ?
+                  'check-box'
+                  :
+                  'check-box-outline-blank'
+                }
+
+
+                size={24}
+
+
+                color={
+                  item.completed
+                  ?
+                  '#2E5BBA'
+                  :
+                  '#5A6472'
+                }
+
+              />
+
+            </TouchableOpacity>
+
+
+
+
+
+            <Text
+
+              style={[
+
+                styles.taskText,
+
+
+                item.completed && styles.completedTask
+
+              ]}
+
+            >
+
+              {item.title}
+
+            </Text>
+
+
+
+
+
+            {/* EDIT BUTTON */}
+
+            <TouchableOpacity
+
+              onPress={()=>handleEditTask(item)}
+
+              style={styles.iconButton}
+
+            >
+
+              <MaterialIcons
+
+                name="edit"
+
+                size={22}
+
+                color="#2E5BBA"
+
+              />
+
+            </TouchableOpacity>
+
+
+
+
+
+
+            {/* DELETE BUTTON */}
+
+            <TouchableOpacity
+
+              onPress={()=>handleDeleteTask(item.id)}
+
+            >
+
+              <MaterialIcons
+
+                name="delete"
+
+                size={22}
+
+                color="#E53935"
+
+              />
+
+            </TouchableOpacity>
+
+
+
+          </View>
+
+
+        ))}
+
+
+      </ScrollView>
+
 
 
     </View>
@@ -152,111 +351,145 @@ export default function TaskFlowScreen() {
 
 
 
-const headerStyles = StyleSheet.create({
-
-  header: {
-
-    marginBottom: 25,
-
-  },
-
-
-  title: {
-
-    fontSize: 32,
-
-    fontWeight: 'bold',
-
-  },
-
-
-});
-
-
 
 
 const styles = StyleSheet.create({
 
-  container: {
 
-    flex: 1,
+container:{
 
-    backgroundColor: 'white',
+  flex:1,
 
-    paddingTop: 70,
+  backgroundColor:'#fff',
 
-    paddingHorizontal: 20,
+  paddingHorizontal:20,
 
-  },
-
-
-  inputRow: {
-
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-  },
+},
 
 
-  input: {
 
-    flex: 1,
+header:{
 
-    height: 50,
+  paddingTop:60,
 
-    borderRadius: 12,
+  paddingBottom:20,
 
-    backgroundColor: '#f5f5f5',
-
-    paddingHorizontal: 15,
-
-    marginRight: 10,
-
-  },
+},
 
 
-  addButton: {
 
-    width: 50,
+title:{
 
-    height: 50,
+  fontSize:30,
 
-    borderRadius: 12,
+  fontWeight:'bold',
 
-    backgroundColor: '#4F46E5',
+  color:'#1F2A44',
 
-    justifyContent: 'center',
-
-    alignItems: 'center',
-
-  },
+},
 
 
-  taskRow: {
-
-    flexDirection: 'row',
-
-    alignItems: 'center',
-
-    backgroundColor: '#fafafa',
-
-    padding: 15,
-
-    borderRadius: 12,
-
-    marginTop: 15,
-
-  },
 
 
-  taskText: {
+inputRow:{
 
-    marginLeft: 10,
+  flexDirection:'row',
 
-    fontSize: 16,
+  alignItems:'center',
 
-  },
+  marginBottom:25,
+
+},
+
+
+
+
+input:{
+
+  flex:1,
+
+  height:50,
+
+  borderWidth:1,
+
+  borderColor:'#D9D9D9',
+
+  borderRadius:12,
+
+  paddingHorizontal:15,
+
+  marginRight:10,
+
+},
+
+
+
+
+addButton:{
+
+  width:50,
+
+  height:50,
+
+  backgroundColor:'#2E5BBA',
+
+  borderRadius:12,
+
+  justifyContent:'center',
+
+  alignItems:'center',
+
+},
+
+
+
+
+taskRow:{
+
+  flexDirection:'row',
+
+  alignItems:'center',
+
+  paddingVertical:12,
+
+  borderBottomWidth:1,
+
+  borderBottomColor:'#EEEEEE',
+
+},
+
+
+
+
+taskText:{
+
+  flex:1,
+
+  marginLeft:10,
+
+  fontSize:16,
+
+  color:'#1F2A44',
+
+},
+
+
+
+completedTask:{
+
+  textDecorationLine:'line-through',
+
+  color:'#888',
+
+},
+
+
+
+iconButton:{
+
+  marginRight:15,
+
+},
 
 
 });
