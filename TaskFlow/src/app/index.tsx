@@ -5,19 +5,25 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function App() {
-  const [task, setTask] = useState('');
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
-  const [tasks, setTasks] = useState([]);
+export default function App() {
+  const [task, setTask] = useState<string>('');
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   // CREATE
-  const handleAddTask = () => {
+  const handleAddTask = (): void => {
     if (!task.trim()) return;
 
-    const newTask = {
+    const newTask: Task = {
       id: Date.now().toString(),
       title: task.trim(),
       completed: false,
@@ -28,7 +34,7 @@ export default function App() {
   };
 
   // UPDATE
-  const handleToggleTask = (id) => {
+  const handleToggleTask = (id: string): void => {
     setTasks(
       tasks.map((item) =>
         item.id === id
@@ -39,16 +45,18 @@ export default function App() {
   };
 
   // DELETE
-  const handleDeleteTask = (id) => {
+  const handleDeleteTask = (id: string): void => {
     setTasks(tasks.filter((item) => item.id !== id));
   };
 
   return (
     <View style={styles.container}>
-      <View style={headerStyles.header}>
-        <Text style={headerStyles.title}>TaskFlow</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>TaskFlow</Text>
       </View>
 
+      {/* Input Section */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
@@ -63,58 +71,66 @@ export default function App() {
         >
           <MaterialIcons
             name="add"
-            size={22}
+            size={24}
             color="#fff"
           />
         </TouchableOpacity>
       </View>
 
-      {/* READ */}
-      {tasks.map((item) => (
-        <View key={item.id} style={styles.taskRow}>
-          <TouchableOpacity
-            onPress={() => handleToggleTask(item.id)}
-          >
-            <MaterialIcons
-              name={
-                item.completed
-                  ? 'check-box'
-                  : 'check-box-outline-blank'
-              }
-              size={24}
-              color={
-                item.completed
-                  ? '#2E5BBA'
-                  : '#5A6472'
-              }
-            />
-          </TouchableOpacity>
+      {/* Task List */}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {tasks.map((item: Task) => (
+          <View key={item.id} style={styles.taskRow}>
+            <TouchableOpacity
+              onPress={() => handleToggleTask(item.id)}
+            >
+              <MaterialIcons
+                name={
+                  item.completed
+                    ? 'check-box'
+                    : 'check-box-outline-blank'
+                }
+                size={24}
+                color={
+                  item.completed
+                    ? '#2E5BBA'
+                    : '#5A6472'
+                }
+              />
+            </TouchableOpacity>
 
-          <Text
-            style={[
-              styles.taskText,
-              item.completed && styles.completedTask,
-            ]}
-          >
-            {item.title}
-          </Text>
+            <Text
+              style={[
+                styles.taskText,
+                item.completed && styles.completedTask,
+              ]}
+            >
+              {item.title}
+            </Text>
 
-          <TouchableOpacity
-            onPress={() => handleDeleteTask(item.id)}
-          >
-            <MaterialIcons
-              name="delete"
-              size={22}
-              color="#E53935"
-            />
-          </TouchableOpacity>
-        </View>
-      ))}
+            <TouchableOpacity
+              onPress={() => handleDeleteTask(item.id)}
+            >
+              <MaterialIcons
+                name="delete"
+                size={22}
+                color="#E53935"
+              />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
-const headerStyles = StyleSheet.create({
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+  },
+
   header: {
     paddingTop: 60,
     paddingBottom: 20,
@@ -124,14 +140,6 @@ const headerStyles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     color: '#1F2A44',
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
   },
 
   inputRow: {
@@ -179,4 +187,3 @@ const styles = StyleSheet.create({
     color: '#888',
   },
 });
-
